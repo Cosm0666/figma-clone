@@ -12,16 +12,15 @@ export default function Ellipse({
   return (
     <g>
       <ellipse
-  cx={x + width / 2}
-  cy={y + height / 2}
-  rx={width / 2}
-  ry={height / 2}
-  fill={fill ? colorToCss(fill) : "#CCC"}
-  stroke={stroke ? colorToCss(stroke) : "#CCC"}
-  strokeWidth={1}
-  opacity={(opacity ?? 100) / 100}
-/>
+        cx={x + width / 2}
+        cy={y + height / 2}
+        rx={width / 2}
+        ry={height / 2}
+        fill={fill ? colorToCss(fill) : "#CCC"}
+        stroke={stroke ? colorToCss(stroke) : "#CCC"}
+        strokeWidth={1}
+        opacity={(opacity ?? 100) / 100}
+      />
     </g>
   );
-  
 }
