@@ -15,8 +15,9 @@ import {
 } from "~/types";
 import { nanoid } from "nanoid";
 import { LiveObject } from "@liveblocks/client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Toolsbar from "../toolsbar/Toolsbar";
+import { set } from "zod";
 
 const MAX_LAYERS = 100;
 
@@ -74,6 +75,13 @@ export default function Canvas() {
     },
     [],
   );
+  const onWheel = useCallback((e: React.WheelEvent) => {
+    setCamera((camera) => ({
+      x:camera.x - e.deltaX,
+      y:camera.y - e.deltaY,
+      zoom: camera.zoom,
+    }))
+  }, [])
 
   const onPointerUp = useMutation(
     ({}, e: React.PointerEvent) => {
@@ -96,8 +104,12 @@ export default function Canvas() {
           }}
           className="h-full w-full touch-none"
         >
-          <svg onPointerUp={onPointerUp} className="h-full w-full">
-            <g>
+          <svg onWheel={onWheel} onPointerUp={onPointerUp} className="h-full w-full">
+            <g
+              style={{
+                transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`,
+              }}
+            >
               {layerIds?.map((layerIds) => (
                 <LayerComponent key={layerIds} id={layerIds} />
               ))}
@@ -108,6 +120,10 @@ export default function Canvas() {
       <Toolsbar
         canvasState={canvasState}
         setCanvasState={(newState) => setState(newState)}
+        zoomIn={() => setCamera({ ...camera, zoom: camera.zoom * 1.1 })}
+        zoomOut={() => setCamera({ ...camera, zoom: camera.zoom * 0.9 })}
+        canZoomIn={camera.zoom < 3}
+        canZoomOut={camera.zoom > 0.3}
       />
     </div>
   );
