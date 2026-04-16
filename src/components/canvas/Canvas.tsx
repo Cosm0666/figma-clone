@@ -77,11 +77,42 @@ export default function Canvas() {
   );
   const onWheel = useCallback((e: React.WheelEvent) => {
     setCamera((camera) => ({
-      x:camera.x - e.deltaX,
-      y:camera.y - e.deltaY,
+      x: camera.x - e.deltaX,
+      y: camera.y - e.deltaY,
       zoom: camera.zoom,
-    }))
-  }, [])
+    }));
+  }, []);
+
+  const onPointerDown = useMutation(
+    ({}, e: React.PointerEvent) => {
+      const point = pointerEventToCanvasPoint(e, camera);
+
+      if (canvasState.mode === CanvasMode.None) {
+        setState({ mode: CanvasMode.Dragging, origin: point });
+      }
+    },
+    [camera, canvasState.mode, setState],
+  );
+
+  const onPointerMove = useMutation(
+    ({}, e: React.PointerEvent) => {
+      const point = pointerEventToCanvasPoint(e, camera);
+
+      if (
+        canvasState.mode === CanvasMode.Dragging &&
+        canvasState.origin !== null
+      ) {
+        const deltaX = point.x - canvasState.origin.x;
+        const deltaY = point.y - canvasState.origin.y;
+        setCamera((camera) => ({
+          x: camera.x + deltaX,
+          y: camera.y + deltaY,
+          zoom: camera.zoom,
+        }));
+      }
+    },
+    [canvasState, setState, insertLayer],
+  );
 
   const onPointerUp = useMutation(
     ({}, e: React.PointerEvent) => {
@@ -91,6 +122,8 @@ export default function Canvas() {
         setState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
         insertLayer(canvasState.layerType, point);
+      }else if (canvasState.mode === CanvasMode.Dragging) {
+        setState({ mode: CanvasMode.Dragging, origin: null });
       }
     },
     [canvasState, setState, insertLayer],
@@ -104,7 +137,13 @@ export default function Canvas() {
           }}
           className="h-full w-full touch-none"
         >
-          <svg onWheel={onWheel} onPointerUp={onPointerUp} className="h-full w-full">
+          <svg
+            onWheel={onWheel}
+            onPointerUp={onPointerUp}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            className="h-full w-full"
+          >
             <g
               style={{
                 transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.zoom})`,
