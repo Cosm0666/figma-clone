@@ -85,10 +85,14 @@ export type CanvasState =
   | {
       mode: CanvasMode.Inserting;
       layerType: LayerType.Ellipse | LayerType.Rectangle | LayerType.Text;
-    };
+    }
+  | {
+    mode: CanvasMode.Pencil;
+  }
 
 export enum CanvasMode {
   None,
   Inserting,
   Dragging,
+  Pencil,
 }
