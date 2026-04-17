@@ -20,6 +20,8 @@ import Toolsbar from "../toolsbar/Toolsbar";
 import { set } from "zod";
 
 const MAX_LAYERS = 100;
+const DRAG_SPEED = 0.25;
+const WHEEL_PAN_SPEED = 0.12;
 
 export default function Canvas() {
   const roomColor = useStorage((root) => root.roomColor);
@@ -75,16 +77,36 @@ export default function Canvas() {
     },
     [],
   );
-  const onWheel = useCallback((e: React.WheelEvent) => {
-    setCamera((camera) => ({
-      x: camera.x - e.deltaX,
-      y: camera.y - e.deltaY,
-      zoom: camera.zoom,
-    }));
+  const onWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault();
+
+    const deltaY = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    setCamera((camera) => {
+      const point = {
+        x: (Math.round(clientX) - rect.left) / camera.zoom - camera.x,
+        y: (Math.round(clientY) - rect.top) / camera.zoom - camera.y,
+      };
+      const nextZoom = Math.min(
+        3,
+        Math.max(0.3, camera.zoom * (1 - deltaY * 0.0012)),
+      );
+      const zoomFactor = nextZoom / camera.zoom;
+
+      return {
+        x: camera.x - point.x * (zoomFactor - 1),
+        y: camera.y - point.y * (zoomFactor - 1),
+        zoom: nextZoom,
+      };
+    });
   }, []);
 
   const onPointerDown = useMutation(
-    ({}, e: React.PointerEvent) => {
+    ({}, e: React.PointerEvent<SVGSVGElement>) => {
+      e.currentTarget.setPointerCapture(e.pointerId);
       const point = pointerEventToCanvasPoint(e, camera);
 
       if (canvasState.mode === CanvasMode.None) {
@@ -95,15 +117,15 @@ export default function Canvas() {
   );
 
   const onPointerMove = useMutation(
-    ({}, e: React.PointerEvent) => {
+    ({}, e: React.PointerEvent<SVGSVGElement>) => {
       const point = pointerEventToCanvasPoint(e, camera);
 
       if (
         canvasState.mode === CanvasMode.Dragging &&
         canvasState.origin !== null
       ) {
-        const deltaX = point.x - canvasState.origin.x;
-        const deltaY = point.y - canvasState.origin.y;
+        const deltaX = (point.x - canvasState.origin.x) * DRAG_SPEED;
+        const deltaY = (point.y - canvasState.origin.y) * DRAG_SPEED;
         setCamera((camera) => ({
           x: camera.x + deltaX,
           y: camera.y + deltaY,
@@ -115,15 +137,16 @@ export default function Canvas() {
   );
 
   const onPointerUp = useMutation(
-    ({}, e: React.PointerEvent) => {
+    ({}, e: React.PointerEvent<SVGSVGElement>) => {
+      e.currentTarget.releasePointerCapture(e.pointerId);
       const point = pointerEventToCanvasPoint(e, camera);
 
       if (canvasState.mode === CanvasMode.None) {
         setState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
         insertLayer(canvasState.layerType, point);
-      }else if (canvasState.mode === CanvasMode.Dragging) {
-        setState({ mode: CanvasMode.Dragging, origin: null });
+      } else if (canvasState.mode === CanvasMode.Dragging) {
+        setState({ mode: CanvasMode.None });
       }
     },
     [canvasState, setState, insertLayer],
@@ -143,6 +166,7 @@ export default function Canvas() {
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             className="h-full w-full"
+            style={{ touchAction: "none" }}
           >
             <g
               style={{

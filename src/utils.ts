@@ -5,11 +5,13 @@ export function colorToCss(color: Color) {
 }
 
 export const pointerEventToCanvasPoint = (
-    e: React.PointerEvent,
+    e: React.PointerEvent<SVGSVGElement>,
     camera: Camera
 ): Point => {
+    const rect = e.currentTarget.getBoundingClientRect();
+
     return {
-        x: Math.round(e.clientX) - camera.x,
-        y: Math.round(e.clientY) - camera.y,
+        x: (Math.round(e.clientX) - rect.left) / camera.zoom - camera.x,
+        y: (Math.round(e.clientY) - rect.top) / camera.zoom - camera.y,
     };
 };
