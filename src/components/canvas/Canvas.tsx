@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useStorage } from "@liveblocks/react/suspense";
+import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense";
 import LayerComponent from "./LayerComponent";
 import { colorToCss, pointerEventToCanvasPoint } from "~/utils";
 import {
@@ -15,9 +15,8 @@ import {
 } from "~/types";
 import { nanoid } from "nanoid";
 import { LiveObject } from "@liveblocks/client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Toolsbar from "../toolsbar/Toolsbar";
-import { set } from "zod";
 
 const MAX_LAYERS = 100;
 const DRAG_SPEED = 0.25;
@@ -26,6 +25,7 @@ const WHEEL_PAN_SPEED = 0.12;
 export default function Canvas() {
   const roomColor = useStorage((root) => root.roomColor);
   const layerIds = useStorage((root) => root.layerIds);
+  const pencilDraft = useSelf((me) => me.presence.pencilDraft);
   const [canvasState, setState] = useState<CanvasState>({
     mode: CanvasMode.None,
   });
@@ -77,6 +77,63 @@ export default function Canvas() {
     },
     [],
   );
+
+  const insertPath = useMutation(({ storage, self, setMyPresence }) => {
+    const liveLayers = storage.get("layers");
+    const { pencilDraft } = self.presence;
+
+    if (
+      pencilDraft === null ||
+      pencilDraft.length < 2 ||
+      liveLayers.size >= MAX_LAYERS
+    ) {
+      setMyPresence({ pencilDraft: null });
+      return;
+    }
+
+    const id = nanoid();
+    liveLayers.set(
+      id,
+      new LiveObject(
+        penPointToPathLayer(pencilDraft, { r: 210, g: 210, b: 210 }),
+      ),
+    );
+
+    const liveLayersIds = storage.get("layerIds");
+    liveLayersIds.push(id);
+    setMyPresence({ pencilDraft: null})
+    setState({ mode: CanvasMode.Pencil });
+  }, []);
+
+  const startDrawing = useMutation(
+    ({ setMyPresence }, point: Point, pressure: number) => {
+      setMyPresence({
+        pencilDraft: [[point.x, point.y, pressure]],
+        penColor: { r: 210, g: 210, b: 210 },
+      });
+    },
+    [],
+  );
+
+  const continueDrawing = useMutation(
+    ({ self, setMyPresence }, point: Point, e: React.PointerEvent) => {
+      const { pencilDraft } = self.presence;
+
+      if (
+        canvasState.mode !== CanvasMode.Pencil ||
+        e.buttons !== 1 ||
+        pencilDraft === null
+      ) {
+        return;
+      }
+
+      setMyPresence({
+        pencilDraft: [...pencilDraft, [point.x, point.y, e.pressure]],
+      });
+    },
+    [canvasState.mode],
+  );
+
   const onWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault();
 
@@ -111,9 +168,14 @@ export default function Canvas() {
 
       if (canvasState.mode === CanvasMode.None) {
         setState({ mode: CanvasMode.Dragging, origin: point });
+        return;
+      }
+      if (canvasState.mode === CanvasMode.Pencil) {
+        startDrawing(point, e.pressure);
+        return;
       }
     },
-    [camera, canvasState.mode, setState],
+    [camera, canvasState.mode, setState, startDrawing],
   );
 
   const onPointerMove = useMutation(
@@ -131,9 +193,11 @@ export default function Canvas() {
           y: camera.y + deltaY,
           zoom: camera.zoom,
         }));
+      } else if (canvasState.mode === CanvasMode.Pencil) {
+        continueDrawing(point, e);
       }
     },
-    [canvasState, setState, insertLayer],
+    [canvasState, setState, insertLayer, continueDrawing],
   );
 
   const onPointerUp = useMutation(
@@ -147,6 +211,8 @@ export default function Canvas() {
         insertLayer(canvasState.layerType, point);
       } else if (canvasState.mode === CanvasMode.Dragging) {
         setState({ mode: CanvasMode.None });
+      } else if (canvasState.mode === CanvasMode.Pencil) {
+        insertPath();
       }
     },
     [canvasState, setState, insertLayer],
@@ -191,3 +257,7 @@ export default function Canvas() {
     </div>
   );
 }
+function penPointToPathLayer(pencilDraft: [x: number, y: number, pressure: number][], arg1: { r: number; g: number; b: number; }): any {
+  throw new Error("Function not implemented.");
+}
+
