@@ -16,6 +16,7 @@ import {
   type Layer,
   type Point,
   type RectangleLayer,
+  type TextLayer,
 } from "~/types";
 import { nanoid } from "nanoid";
 import { LiveObject } from "@liveblocks/client";
@@ -72,6 +73,21 @@ export default function Canvas() {
           stroke: { r: 217, g: 217, b: 217 },
           opacity: 100,
         });
+      } else if (layerType === LayerType.Text) {
+        layer = new LiveObject<TextLayer>({
+          type: LayerType.Text,
+          x: position.x,
+          y: position.y,
+          height: 100,
+          width: 100,
+          fontSize: 16,
+          text: "Text",
+          fontWeight: 400,
+          fontFamily: "Inter, sans-serif",
+          stroke: { r: 210, g: 210, b: 210 },
+          fill: { r: 210, g: 210, b: 210 },
+          opacity: 100,
+        });
       }
 
       if (layer) {
@@ -100,14 +116,13 @@ export default function Canvas() {
     liveLayers.set(
       id,
       new LiveObject(
-        penPointToPathLayer(pencilDraft, { r: 210, g: 210, b: 210 }),
+        penPointsToPathLayer(pencilDraft, { r: 210, g: 210, b: 210 }),
       ),
     );
 
     const liveLayersIds = storage.get("layerIds");
     liveLayersIds.push(id);
     setMyPresence({ pencilDraft: null });
-    setState({ mode: CanvasMode.Pencil });
   }, []);
 
   const startDrawing = useMutation(
@@ -270,10 +285,4 @@ export default function Canvas() {
       />
     </div>
   );
-}
-function penPointToPathLayer(
-  pencilDraft: [x: number, y: number, pressure: number][],
-  arg1: { r: number; g: number; b: number },
-): any {
-  throw new Error("Function not implemented.");
 }

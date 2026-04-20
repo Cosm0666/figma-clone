@@ -3,6 +3,7 @@ import { memo } from "react";
 import { LayerType } from "~/types";
 import Rectangle from "./Rectangle";
 import Ellipse from "./Ellipse";
+import Text from "./Text";
 import Path from "./Path";
 import { colorToCss } from "~/utils";
 
@@ -29,6 +30,8 @@ const LayerComponent = memo(({ id }: { id: string }) => {
       return <Rectangle id={id} layer={layer} />;
     case LayerType.Ellipse:
       return <Ellipse id={id} layer={layer} />;
+    case LayerType.Text:
+      return <Text id={id} layer={layer} />;
     default:
       return null;
   }
