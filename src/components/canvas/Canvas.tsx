@@ -2,7 +2,11 @@
 
 import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense";
 import LayerComponent from "./LayerComponent";
-import { colorToCss, pointerEventToCanvasPoint } from "~/utils";
+import {
+  colorToCss,
+  penPointsToPathLayer,
+  pointerEventToCanvasPoint,
+} from "~/utils";
 import {
   CanvasMode,
   LayerType,
@@ -17,6 +21,7 @@ import { nanoid } from "nanoid";
 import { LiveObject } from "@liveblocks/client";
 import { useCallback, useState } from "react";
 import Toolsbar from "../toolsbar/Toolsbar";
+import Path from "./Path";
 
 const MAX_LAYERS = 100;
 const DRAG_SPEED = 0.25;
@@ -101,7 +106,7 @@ export default function Canvas() {
 
     const liveLayersIds = storage.get("layerIds");
     liveLayersIds.push(id);
-    setMyPresence({ pencilDraft: null})
+    setMyPresence({ pencilDraft: null });
     setState({ mode: CanvasMode.Pencil });
   }, []);
 
@@ -242,6 +247,15 @@ export default function Canvas() {
               {layerIds?.map((layerIds) => (
                 <LayerComponent key={layerIds} id={layerIds} />
               ))}
+              {pencilDraft != null && pencilDraft.length > 0 && (
+                <Path
+                  x={0}
+                  y={0}
+                  opacity={100}
+                  fill={colorToCss({ r: 210, g: 210, b: 210 })}
+                  points={pencilDraft}
+                />
+              )}
             </g>
           </svg>
         </div>
@@ -257,7 +271,9 @@ export default function Canvas() {
     </div>
   );
 }
-function penPointToPathLayer(pencilDraft: [x: number, y: number, pressure: number][], arg1: { r: number; g: number; b: number; }): any {
+function penPointToPathLayer(
+  pencilDraft: [x: number, y: number, pressure: number][],
+  arg1: { r: number; g: number; b: number },
+): any {
   throw new Error("Function not implemented.");
 }
-
