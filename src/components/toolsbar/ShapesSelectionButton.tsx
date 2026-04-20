@@ -43,7 +43,8 @@ export default function ShapesSelectionButton({
           <IoSquareOutline className="h-5 w-5" />
         )}
         {canvasState.mode === CanvasMode.Inserting &&
-          canvasState.layerType === LayerType.Rectangle && (
+          (canvasState.layerType === LayerType.Rectangle ||
+            canvasState.layerType === LayerType.Text) && (
             <IoSquareOutline className="h-5 w-5" />
           )}
         {canvasState.mode === CanvasMode.Inserting &&
