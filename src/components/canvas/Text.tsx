@@ -3,7 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import type { TextLayer } from "~/types";
 import { colorToCss } from "~/utils";
 
-export default function Text({ id, layer }: { id: string; layer: TextLayer }) {
+export default function Text({
+  id,
+  layer,
+  onPointerDown,
+}: {
+  id: string;
+  layer: TextLayer;
+  onPointerDown: (e: React.PointerEvent, layerId: string) => void;
+}) {
   const {
     x,
     y,
@@ -34,7 +42,7 @@ export default function Text({ id, layer }: { id: string; layer: TextLayer }) {
   );
 
   useEffect(() => {
-    if(isEditing && inputRef.current) {
+    if (isEditing && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isEditing]);
@@ -60,7 +68,10 @@ export default function Text({ id, layer }: { id: string; layer: TextLayer }) {
   };
 
   return (
-    <g onDoubleClick={handleDoubleClick}>
+    <g
+      onDoubleClick={handleDoubleClick}
+      onPointerDown={(e) => onPointerDown(e, id)}
+    >
       {isEditing ? (
         <foreignObject x={x} y={y} width={width} height={height}>
           <input
@@ -82,6 +93,7 @@ export default function Text({ id, layer }: { id: string; layer: TextLayer }) {
         </foreignObject>
       ) : (
         <text
+          onPointerDown={(e) => onPointerDown(e, id)}
           x={x}
           y={y + fontSize}
           fill={fill ? colorToCss(fill) : "#CCC"}

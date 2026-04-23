@@ -4,14 +4,17 @@ import { colorToCss } from "~/utils";
 export default function Ellipse({
   id,
   layer,
+  onPointerDown,
 }: {
   id: string;
   layer: EllipseLayer;
+  onPointerDown: (e: React.PointerEvent, layerId: string) => void;
 }) {
   const { x, y, width, height, fill, stroke, opacity } = layer;
   return (
     <g>
       <ellipse
+        onPointerDown={(e) => onPointerDown(e, id)}
         cx={x + width / 2}
         cy={y + height / 2}
         rx={width / 2}

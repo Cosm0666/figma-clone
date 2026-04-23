@@ -36,6 +36,22 @@ export default function Canvas() {
     mode: CanvasMode.None,
   });
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 });
+  const onLayerPointerDown = useMutation(
+    ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
+      if (
+        canvasState.mode === CanvasMode.Pencil ||
+        canvasState.mode === CanvasMode.Inserting
+      ) {
+        return;
+      }
+      e.stopPropagation();
+      if (!self.presence.selection?.includes(layerId)) {
+        setMyPresence({ selection: [layerId], });
+      }
+    },
+    [],
+  );
+
   const insertLayer = useMutation(
     (
       { storage, setMyPresence },
@@ -260,7 +276,11 @@ export default function Canvas() {
               }}
             >
               {layerIds?.map((layerIds) => (
-                <LayerComponent key={layerIds} id={layerIds} />
+                <LayerComponent
+                  key={layerIds}
+                  id={layerIds}
+                  onLayerPointerDown={onLayerPointerDown}
+                />
               ))}
               {pencilDraft != null && pencilDraft.length > 0 && (
                 <Path
