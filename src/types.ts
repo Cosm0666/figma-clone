@@ -74,6 +74,20 @@ export type Point = {
   y: number;
 };
 
+export type XYWH = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export enum Side {
+  Top = 1,
+  Bottom = 2,
+  Left = 4,
+  Right = 8,
+}
+
 export type CanvasState =
   | {
       mode: CanvasMode.None;
@@ -87,12 +101,18 @@ export type CanvasState =
       layerType: LayerType.Ellipse | LayerType.Rectangle | LayerType.Text;
     }
   | {
-    mode: CanvasMode.Pencil;
-  }
+      mode: CanvasMode.Pencil;
+    }
+  | {
+      mode: CanvasMode.Resizing;
+      corner: Side;
+      initialBuild: XYWH;
+    };
 
 export enum CanvasMode {
   None,
   Inserting,
   Dragging,
   Pencil,
+  Resizing,
 }

@@ -1,15 +1,22 @@
 "use client";
 
-import { useMutation, useMyPresence, useSelf, useStorage } from "@liveblocks/react/suspense";
+import {
+  useMutation,
+  useMyPresence,
+  useSelf,
+  useStorage,
+} from "@liveblocks/react/suspense";
 import LayerComponent from "./LayerComponent";
 import {
   colorToCss,
   penPointsToPathLayer,
   pointerEventToCanvasPoint,
+  resizeBounds,
 } from "~/utils";
 import {
   CanvasMode,
   LayerType,
+  Side,
   type Camera,
   type CanvasState,
   type EllipseLayer,
@@ -17,6 +24,7 @@ import {
   type Point,
   type RectangleLayer,
   type TextLayer,
+  type XYWH,
 } from "~/types";
 import { nanoid } from "nanoid";
 import { LiveObject } from "@liveblocks/client";
@@ -49,8 +57,15 @@ export default function Canvas() {
       }
       e.stopPropagation();
       if (!self.presence.selection?.includes(layerId)) {
-        setMyPresence({ selection: [layerId], });
+        setMyPresence({ selection: [layerId] });
       }
+    },
+    [],
+  );
+
+  const onResizeHandlePointerDown = useCallback(
+    (corner: Side, initialBuild: XYWH) => {
+      setState({ mode: CanvasMode.Resizing, corner, initialBuild });
     },
     [],
   );
@@ -144,6 +159,29 @@ export default function Canvas() {
     setMyPresence({ pencilDraft: null });
   }, []);
 
+  const resizeSelectedLayer = useMutation(
+    ({ self, storage }, point: Point) => {
+      if (canvasState.mode !== CanvasMode.Resizing) {
+        return;
+      }
+      const bounds = resizeBounds(
+        canvasState.initialBuild,
+        canvasState.corner,
+        point,
+      );
+
+      const liveLayers = storage.get("layers");
+
+      if (self.presence.selection?.length > 0) {
+        const layer = liveLayers.get(self.presence.selection[0]!);
+        if (layer) {
+          layer.update(bounds);
+        }
+      }
+    },
+    [canvasState],
+  );
+
   const startDrawing = useMutation(
     ({ setMyPresence }, point: Point, pressure: number) => {
       setMyPresence({
@@ -234,9 +272,11 @@ export default function Canvas() {
         }));
       } else if (canvasState.mode === CanvasMode.Pencil) {
         continueDrawing(point, e);
+      } else if (canvasState.mode === CanvasMode.Resizing) {
+        resizeSelectedLayer(point);
       }
     },
-    [canvasState, setState, insertLayer, continueDrawing],
+    [canvasState, setState, insertLayer, continueDrawing, resizeSelectedLayer],
   );
 
   const onPointerUp = useMutation(
@@ -285,7 +325,9 @@ export default function Canvas() {
                   onLayerPointerDown={onLayerPointerDown}
                 />
               ))}
-              <SelectionBox />
+              <SelectionBox
+                onResizeHandlePointerDown={onResizeHandlePointerDown}
+              />
               {pencilDraft != null && pencilDraft.length > 0 && (
                 <Path
                   x={0}

@@ -1,4 +1,4 @@
-import { LayerType } from "~/types";
+import { LayerType, Side, type XYWH } from "~/types";
 import { useSelf, useStorage } from "@liveblocks/react/suspense";
 import { useEffect, useRef, useState } from "react";
 
@@ -66,51 +66,75 @@ export default function SelectionBox({onResizeHandlePointerDown}: {onResizeHandl
               transform: `translate(${layer.x - handleWidth / 2}px, ${layer.y - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Top + Side.Left, layer);
+            }}
           />
           <rect
             style={{
-              cursor: "nwse-resize",
+              cursor: "ns-resize",
               width: `${handleWidth}px`,
               height: `${handleWidth}px`,
               transform: `translate(${layer.x + layer.width / 2 - handleWidth / 2}px, ${layer.y - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Top, layer);
+            }}
           />
           <rect
             style={{
-              cursor: "nwse-resize",
+              cursor: "nesw-resize",
               width: `${handleWidth}px`,
               height: `${handleWidth}px`,
               transform: `translate(${layer.x + layer.width - handleWidth / 2}px, ${layer.y - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Top + Side.Right, layer);
+            }}
           />
           <rect
             style={{
-              cursor: "nwse-resize",
+              cursor: "ew-resize",
               width: `${handleWidth}px`,
               height: `${handleWidth}px`,
               transform: `translate(${layer.x  - handleWidth / 2}px, ${layer.y + layer.height / 2 - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Left, layer);
+            }}  
           />
           <rect
             style={{
-              cursor: "nwse-resize",
+              cursor: "nesw-resize",
               width: `${handleWidth}px`,
               height: `${handleWidth}px`,
               transform: `translate(${layer.x  - handleWidth / 2}px, ${layer.y + layer.height - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Bottom + Side.Left, layer);
+            }}
           />
           <rect
             style={{
-              cursor: "nwse-resize",
+              cursor: "ew-resize",
               width: `${handleWidth}px`,
               height: `${handleWidth}px`,
               transform: `translate(${layer.x + layer.width - handleWidth / 2}px, ${layer.y + layer.height / 2 - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Right, layer);
+            }}
           />
           <rect
             style={{
@@ -120,15 +144,23 @@ export default function SelectionBox({onResizeHandlePointerDown}: {onResizeHandl
               transform: `translate(${layer.x + layer.width - handleWidth / 2}px, ${layer.y + layer.height - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Bottom + Side.Right, layer);
+            }}
           />
           <rect
             style={{
-              cursor: "nwse-resize",
+              cursor: "ns-resize",
               width: `${handleWidth}px`,
               height: `${handleWidth}px`,
               transform: `translate(${layer.x + layer.width / 2 - handleWidth / 2}px, ${layer.y + layer.height - handleWidth / 2}px)`,
             }}
             className="fill-white stroke-[#4697d1] stroke-[1px]"
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onResizeHandlePointerDown(Side.Bottom, layer);
+            }}
           />
         </>
       )}
