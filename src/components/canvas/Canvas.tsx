@@ -35,6 +35,7 @@ import SelectionBox from "./SelectionBox";
 
 const MAX_LAYERS = 100;
 const DRAG_SPEED = 0.25;
+const MOVE_SPEED = 0.4;
 const WHEEL_PAN_SPEED = 0.12;
 
 export default function Canvas() {
@@ -59,8 +60,14 @@ export default function Canvas() {
       if (!self.presence.selection?.includes(layerId)) {
         setMyPresence({ selection: [layerId] });
       }
+
+      const point = pointerEventToCanvasPoint(
+        e as React.PointerEvent<SVGSVGElement>,
+        camera,
+      );
+      setState({ mode: CanvasMode.Translating, current: point });
     },
-    [],
+    [canvasState.mode, camera, canvasState.mode],
   );
 
   const onResizeHandlePointerDown = useCallback(
@@ -159,6 +166,33 @@ export default function Canvas() {
     setMyPresence({ pencilDraft: null });
   }, []);
 
+  const translateSlectedLayers = useMutation(
+    ({ storage, self }, point: Point) => {
+      if (canvasState.mode !== CanvasMode.Translating) {
+        return;
+      }
+
+      const offset = {
+        x: (point.x - canvasState.current.x) * MOVE_SPEED,
+        y: (point.y - canvasState.current.y) * MOVE_SPEED,
+      };
+
+      const liveLayers = storage.get("layers");
+      for (const id of self.presence.selection) {
+        const layer = liveLayers.get(id);
+        if (layer) {
+          layer.update({
+            x: layer.get("x") + offset.x,
+            y: layer.get("y") + offset.y,
+          });
+        }
+      }
+
+      setState({ mode: CanvasMode.Translating, current: point });
+    },
+    [canvasState],
+  );
+
   const resizeSelectedLayer = useMutation(
     ({ self, storage }, point: Point) => {
       if (canvasState.mode !== CanvasMode.Resizing) {
@@ -181,6 +215,12 @@ export default function Canvas() {
     },
     [canvasState],
   );
+
+  const unselectLayers = useMutation(({ self, setMyPresence }) => {
+    if (self.presence.selection?.length > 0) {
+      setMyPresence({ selection: [] });
+    }
+  }, []);
 
   const startDrawing = useMutation(
     ({ setMyPresence }, point: Point, pressure: number) => {
@@ -270,6 +310,8 @@ export default function Canvas() {
           y: camera.y + deltaY,
           zoom: camera.zoom,
         }));
+      } else if (canvasState.mode === CanvasMode.Translating) {
+        translateSlectedLayers(point);
       } else if (canvasState.mode === CanvasMode.Pencil) {
         continueDrawing(point, e);
       } else if (canvasState.mode === CanvasMode.Resizing) {
@@ -285,6 +327,7 @@ export default function Canvas() {
       const point = pointerEventToCanvasPoint(e, camera);
 
       if (canvasState.mode === CanvasMode.None) {
+        unselectLayers();
         setState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
         insertLayer(canvasState.layerType, point);
@@ -292,9 +335,11 @@ export default function Canvas() {
         setState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Pencil) {
         insertPath();
+      } else {
+        setState({ mode: CanvasMode.None });
       }
     },
-    [canvasState, setState, insertLayer],
+    [canvasState, setState, insertLayer, unselectLayers],
   );
   return (
     <div className="flex h-screen w-full">

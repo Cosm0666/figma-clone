@@ -107,6 +107,10 @@ export type CanvasState =
       mode: CanvasMode.Resizing;
       corner: Side;
       initialBuild: XYWH;
+    }
+  | {
+      mode: CanvasMode.Translating;
+      current: Point;
     };
 
 export enum CanvasMode {
@@ -115,4 +119,5 @@ export enum CanvasMode {
   Dragging,
   Pencil,
   Resizing,
+  Translating,
 }
