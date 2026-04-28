@@ -69,6 +69,7 @@ export default function Text({
 
   return (
     <g
+      className="group"
       onDoubleClick={handleDoubleClick}
       onPointerDown={(e) => onPointerDown(e, id)}
     >
@@ -92,19 +93,30 @@ export default function Text({
           />
         </foreignObject>
       ) : (
-        <text
-          onPointerDown={(e) => onPointerDown(e, id)}
-          x={x}
-          y={y + fontSize}
-          fill={fill ? colorToCss(fill) : "#CCC"}
-          stroke={stroke ? colorToCss(stroke) : "#CCC"}
-          opacity={`${opacity}%`}
-          fontFamily={fontFamily}
-          fontWeight={fontWeight}
-          fontSize={fontSize}
-        >
-          {text}
-        </text>
+        <>
+          <rect
+            style={{ transform: `translate(${x}px, ${y}px)` }}
+            width={width}
+            height={height}
+            fill="none"
+            stroke="#0b99ff"
+            strokeWidth="2"
+            className="pointer-events-none opacity-0 group-hover:opacity-100"
+          />
+          <text
+            onPointerDown={(e) => onPointerDown(e, id)}
+            x={x}
+            y={y + fontSize}
+            fill={fill ? colorToCss(fill) : "#CCC"}
+            stroke={stroke ? colorToCss(stroke) : "#CCC"}
+            opacity={`${opacity}%`}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            fontSize={fontSize}
+          >
+            {text}
+          </text>
+        </>
       )}
     </g>
   );
