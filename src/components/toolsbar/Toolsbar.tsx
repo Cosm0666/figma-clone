@@ -5,6 +5,8 @@ import ZoomInButton from "./ZoomInButton";
 import ZoomOutButton from "./ZoomOutButton";
 import PencilButton from "../toolsbar/PencilButton";
 import TextButton from "./TextButton";
+import UndoButton from "./UndoButton";
+import RedoButton from "./RedoButton";
 
 export default function Toolsbar({
   canvasState,
@@ -66,6 +68,11 @@ export default function Toolsbar({
           isActive={canvasState.mode === CanvasMode.Pencil}
           onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
         />
+        <div className="w-px self-stretch bg-black/10" />
+        <div className="flex items-center justify-center">
+          <RedoButton onClick={zoomOut} disabled={!canZoomOut} />
+          <UndoButton onClick={zoomIn} disabled={!canZoomIn} />
+        </div>
         <div className="w-px self-stretch bg-black/10" />
         <div className="flex items-center justify-center">
           <ZoomInButton onClick={zoomIn} disabled={!canZoomIn} />
