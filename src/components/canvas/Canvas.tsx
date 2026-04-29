@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  useCanRedo,
+  useCanUndo,
+  useHistory,
   useMutation,
   useMyPresence,
   useSelf,
@@ -34,8 +37,8 @@ import Path from "./Path";
 import SelectionBox from "./SelectionBox";
 
 const MAX_LAYERS = 100;
-const DRAG_SPEED = 0.25;
-const MOVE_SPEED = 0.4;
+const DRAG_SPEED = 0.55;
+const MOVE_SPEED = 0.6;
 const WHEEL_PAN_SPEED = 0.12;
 
 export default function Canvas() {
@@ -47,6 +50,9 @@ export default function Canvas() {
     mode: CanvasMode.None,
   });
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 });
+  const history = useHistory();
+  const canUndo = useCanUndo();
+  const canRedo = useCanRedo();
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
@@ -56,9 +62,11 @@ export default function Canvas() {
       ) {
         return;
       }
+
+      history.pause();
       e.stopPropagation();
       if (!self.presence.selection?.includes(layerId)) {
-        setMyPresence({ selection: [layerId] });
+        setMyPresence({ selection: [layerId] }, { addToHistory: true });
       }
 
       const point = pointerEventToCanvasPoint(
@@ -67,14 +75,15 @@ export default function Canvas() {
       );
       setState({ mode: CanvasMode.Translating, current: point });
     },
-    [canvasState.mode, camera, canvasState.mode],
+    [canvasState.mode, camera, canvasState.mode, history],
   );
 
   const onResizeHandlePointerDown = useCallback(
     (corner: Side, initialBuild: XYWH) => {
+      history.pause();
       setState({ mode: CanvasMode.Resizing, corner, initialBuild });
     },
-    [],
+    [history],
   );
 
   const insertLayer = useMutation(
@@ -218,7 +227,7 @@ export default function Canvas() {
 
   const unselectLayers = useMutation(({ self, setMyPresence }) => {
     if (self.presence.selection?.length > 0) {
-      setMyPresence({ selection: [] });
+      setMyPresence({ selection: [] }, { addToHistory: true });
     }
   }, []);
 
@@ -318,7 +327,7 @@ export default function Canvas() {
         resizeSelectedLayer(point);
       }
     },
-    [canvasState, setState, insertLayer, continueDrawing, resizeSelectedLayer],
+    [camera, canvasState, setState, insertLayer, continueDrawing, resizeSelectedLayer, translateSlectedLayers],
   );
 
   const onPointerUp = useMutation(
@@ -338,8 +347,9 @@ export default function Canvas() {
       } else {
         setState({ mode: CanvasMode.None });
       }
+      history.resume();
     },
-    [canvasState, setState, insertLayer, unselectLayers],
+    [camera, canvasState, setState, insertLayer, unselectLayers, history],
   );
   return (
     <div className="flex h-screen w-full">
@@ -393,6 +403,10 @@ export default function Canvas() {
         zoomOut={() => setCamera({ ...camera, zoom: camera.zoom * 0.9 })}
         canZoomIn={camera.zoom < 3}
         canZoomOut={camera.zoom > 0.3}
+        redo={() => history.redo()}
+        undo={() => history.undo()}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
     </div>
   );

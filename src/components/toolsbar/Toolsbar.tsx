@@ -15,6 +15,10 @@ export default function Toolsbar({
   zoomOut,
   canZoomIn,
   canZoomOut,
+  canUndo,
+  canRedo,
+  undo,
+  redo,
 }: {
   canvasState: CanvasState;
   setCanvasState: (newState: CanvasState) => void;
@@ -22,6 +26,10 @@ export default function Toolsbar({
   zoomOut: () => void;
   canZoomIn: boolean;
   canZoomOut: boolean;
+  canUndo: boolean;
+  canRedo: boolean;
+  undo: () => void;
+  redo: () => void;
 }) {
   return (
     <div className="fixed bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center justify-center rounded-lg bg-white p-1 shadow-[0_0_3px_rgb(0,0,0,0.18)]">
@@ -70,8 +78,8 @@ export default function Toolsbar({
         />
         <div className="w-px self-stretch bg-black/10" />
         <div className="flex items-center justify-center">
-          <RedoButton onClick={zoomOut} disabled={!canZoomOut} />
-          <UndoButton onClick={zoomIn} disabled={!canZoomIn} />
+          <UndoButton onClick={undo} disabled={!canUndo} />
+          <RedoButton onClick={redo} disabled={!canRedo} />
         </div>
         <div className="w-px self-stretch bg-black/10" />
         <div className="flex items-center justify-center">
