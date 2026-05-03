@@ -3,6 +3,7 @@ import {
   Side,
   type Camera,
   type Color,
+  type Layer,
   type PathLayer,
   type Point,
   type XYWH,
@@ -124,3 +125,38 @@ export const pointerEventToCanvasPoint = (
     y: (e.clientY - rect.top - camera.y) / camera.zoom,
   };
 };
+
+export function findIntersectionLayers(
+  layerIds: readonly string[],
+  layers: ReadonlyMap<string, Layer>,
+  a: Point,
+  b: Point,
+) {
+  const rect = {
+    x: Math.min(a.x, b.x),
+    y: Math.min(a.y, b.y),
+    width: Math.abs(a.x - b.x),
+    height: Math.abs(a.y - b.y),
+  };
+
+  const ids = [];
+
+  for (const layerId of layerIds) {
+    const layer = layers.get(layerId);
+    if (!layer) {
+      continue;
+    }
+
+    const { x, y, height, width } = layer;
+    if (
+      rect.x < x + width &&
+      rect.x + rect.width > x &&
+      rect.y < y + height &&
+      rect.y + rect.height > y
+    ) {
+      ids.push(layerId);
+    }
+  }
+
+  return ids;
+}

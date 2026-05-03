@@ -12,6 +12,7 @@ import {
 import LayerComponent from "./LayerComponent";
 import {
   colorToCss,
+  findIntersectionLayers,
   penPointsToPathLayer,
   pointerEventToCanvasPoint,
   resizeBounds,
@@ -300,15 +301,43 @@ export default function Canvas() {
         startDrawing(point, e.pressure);
         return;
       }
+
+      setState({ mode: CanvasMode.Pressing, origin: point });
     },
     [camera, canvasState.mode, setState, startDrawing],
+  );
+
+  const startMultiSelection = useCallback((current: Point, origin: Point) => {
+    if (Math.abs(current.x - origin.x) + Math.abs(current.y - origin.y) > 5) {
+      setState({ mode: CanvasMode.SelectionNet, origin, current });
+    }
+  }, []);
+
+  const updateSelectionNet = useMutation(
+    ({ storage, setMyPresence }, current: Point, origin: Point) => {
+      if (layerIds) {
+        const layers = storage.get("layers").toImmutable();
+        setState({
+          mode: CanvasMode.SelectionNet,
+          origin,
+          current,
+        });
+        const ids = findIntersectionLayers(layerIds, layers, origin, current);
+        setMyPresence({ selection: ids }, { addToHistory: true });
+      }
+    },
+    [layerIds],
   );
 
   const onPointerMove = useMutation(
     ({}, e: React.PointerEvent<SVGSVGElement>) => {
       const point = pointerEventToCanvasPoint(e, camera);
 
-      if (
+      if (canvasState.mode === CanvasMode.Pressing) {
+        startMultiSelection(canvasState.origin, point);
+      } else if (canvasState.mode === CanvasMode.SelectionNet) {
+        updateSelectionNet(point, canvasState.origin);
+      } else if (
         canvasState.mode === CanvasMode.Dragging &&
         canvasState.origin !== null
       ) {
@@ -327,7 +356,16 @@ export default function Canvas() {
         resizeSelectedLayer(point);
       }
     },
-    [camera, canvasState, setState, insertLayer, continueDrawing, resizeSelectedLayer, translateSlectedLayers],
+    [
+      camera,
+      canvasState,
+      setState,
+      insertLayer,
+      continueDrawing,
+      resizeSelectedLayer,
+      translateSlectedLayers,
+      updateSelectionNet,
+    ],
   );
 
   const onPointerUp = useMutation(
@@ -335,7 +373,10 @@ export default function Canvas() {
       e.currentTarget.releasePointerCapture(e.pointerId);
       const point = pointerEventToCanvasPoint(e, camera);
 
-      if (canvasState.mode === CanvasMode.None) {
+      if (
+        canvasState.mode === CanvasMode.None ||
+        canvasState.mode === CanvasMode.Pressing
+      ) {
         unselectLayers();
         setState({ mode: CanvasMode.None });
       } else if (canvasState.mode === CanvasMode.Inserting) {
@@ -383,6 +424,20 @@ export default function Canvas() {
               <SelectionBox
                 onResizeHandlePointerDown={onResizeHandlePointerDown}
               />
+              {canvasState.mode === CanvasMode.SelectionNet &&
+                canvasState.current != null && (
+                  <rect
+                    className="fill-blue-600/5 stroke-blue-600 stroke-[0.5]"
+                    x={Math.min(canvasState.origin.x, canvasState.current.x)}
+                    y={Math.min(canvasState.origin.y, canvasState.current.y)}
+                    width={Math.abs(
+                      canvasState.current.x - canvasState.origin.x,
+                    )}
+                    height={Math.abs(
+                      canvasState.current.y - canvasState.origin.y,
+                    )}
+                  />
+                )}
               {pencilDraft != null && pencilDraft.length > 0 && (
                 <Path
                   x={0}
