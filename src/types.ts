@@ -93,6 +93,9 @@ export type CanvasState =
       mode: CanvasMode.None;
     }
   | {
+      mode: CanvasMode.RightCLick;
+    }
+  | {
       mode: CanvasMode.SelectionNet;
       origin: Point;
       current?: Point;

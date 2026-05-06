@@ -37,6 +37,7 @@ import Toolsbar from "../toolsbar/Toolsbar";
 import Path from "./Path";
 import SelectionBox from "./SelectionBox";
 import useDeleteLayers from "~/hooks/useDeleteLayers";
+import SelectionTools from "./SelectionTools";
 
 const MAX_LAYERS = 100;
 const DRAG_SPEED = 0.55;
@@ -116,11 +117,15 @@ export default function Canvas() {
         setMyPresence({ selection: [layerId] }, { addToHistory: true });
       }
 
-      const point = pointerEventToCanvasPoint(
-        e as React.PointerEvent<SVGSVGElement>,
-        camera,
-      );
-      setState({ mode: CanvasMode.Translating, current: point });
+      if (e.nativeEvent.button === 2) {
+        setState({ mode: CanvasMode.RightCLick });
+      } else {
+        const point = pointerEventToCanvasPoint(
+          e as React.PointerEvent<SVGSVGElement>,
+          camera,
+        );
+        setState({ mode: CanvasMode.Translating, current: point });
+      }
     },
     [canvasState.mode, camera, canvasState.mode, history],
   );
@@ -422,6 +427,8 @@ export default function Canvas() {
 
   const onPointerUp = useMutation(
     ({}, e: React.PointerEvent<SVGSVGElement>) => {
+      if(canvasState.mode === CanvasMode.RightCLick) return
+
       e.currentTarget.releasePointerCapture(e.pointerId);
       const point = pointerEventToCanvasPoint(e, camera);
 
@@ -453,6 +460,7 @@ export default function Canvas() {
           }}
           className="h-full w-full touch-none"
         >
+          <SelectionTools camera={camera} canvasMode={canvasState.mode}/>
           <svg
             onWheel={onWheel}
             onPointerUp={onPointerUp}
