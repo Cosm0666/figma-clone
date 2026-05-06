@@ -131,4 +131,5 @@ export enum CanvasMode {
   Translating,
   SelectionNet,
   Pressing,
+  RightCLick,
 }
