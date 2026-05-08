@@ -1,14 +1,61 @@
 import useSelectionBounds from "~/hooks/useSelectionBounds";
 import { CanvasMode, type Camera } from "~/types";
 import { BsArrowDown, BsArrowUp } from "react-icons/bs";
+import { useMutation, useSelf } from "@liveblocks/react/suspense";
 
 export default function SelectionTools({
   camera,
-  canvasMode
+  canvasMode,
 }: {
   camera: Camera;
   canvasMode: CanvasMode;
 }) {
+  const selection = useSelf((me) => me.presence.selection);
+  const bringToFront = useMutation(({ storage }) => {
+    const liveLayerIds = storage.get("layerIds");
+    const indices: number[] = [];
+
+    const arr = liveLayerIds.toArray();
+
+    for (let i = 0; i < arr.length; i++) {
+      const element = arr[i];
+
+      if (element !== undefined && selection?.includes(element)) {
+        indices.push(i);
+      }
+    }
+
+    for (let i = indices.length - 1; i >= 0; i--) {
+      const element = indices[i];
+      if (element !== undefined) {
+        liveLayerIds.move(element, arr.length - 1 - (indices.length - 1 - i));
+      }
+    }
+  }, [selection]);
+
+
+  const sendToBack = useMutation(({ storage }) => {
+    const liveLayerIds = storage.get("layerIds");
+    const indices: number[] = [];
+
+    const arr = liveLayerIds.toArray();
+
+    for (let i = 0; i < arr.length; i++) {
+      const element = arr[i];
+
+      if (element !== undefined && selection?.includes(element)) {
+        indices.push(i);
+      }
+    }
+
+    for (let i = 0; i < indices.length; i++) {
+      const element = indices[i];
+      if (element !== undefined) {
+        liveLayerIds.move(element, i);
+      }
+    }
+  }, [selection]);
+
   const selectionBounds = useSelectionBounds();
   if (!selectionBounds) {
     return null;
@@ -25,11 +72,17 @@ export default function SelectionTools({
       }}
       className="absolute flex min-w-37.5 flex-col rounded-xl bg-[#1e1e1e] p-2 shadow-lg"
     >
-      <button className="flex w-full items-center justify-between rounded-md px-1 py-1 text-white hover:to-blue-500">
+      <button
+        onClick={bringToFront}
+        className="flex w-full items-center justify-between rounded-md px-1 py-1 text-white hover:to-blue-500"
+      >
         <span>Trazer para frente</span>
         <BsArrowDown className="mr-2 h-4 w-4" />
       </button>
-      <button className="flex w-full items-center justify-between rounded-md px-1 py-1 text-white hover:to-blue-500">
+      <button
+        onClick={sendToBack}
+        className="flex w-full items-center justify-between rounded-md px-1 py-1 text-white hover:to-blue-500"
+      >
         <span>Mandar para tras</span>
         <BsArrowUp className="mr-2 h-4 w-4" />
       </button>
