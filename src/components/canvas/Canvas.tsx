@@ -427,7 +427,7 @@ export default function Canvas() {
 
   const onPointerUp = useMutation(
     ({}, e: React.PointerEvent<SVGSVGElement>) => {
-      if(canvasState.mode === CanvasMode.RightCLick) return
+      if (canvasState.mode === CanvasMode.RightCLick) return;
 
       e.currentTarget.releasePointerCapture(e.pointerId);
       const point = pointerEventToCanvasPoint(e, camera);
@@ -460,7 +460,7 @@ export default function Canvas() {
           }}
           className="h-full w-full touch-none"
         >
-          <SelectionTools camera={camera} canvasMode={canvasState.mode}/>
+          <SelectionTools camera={camera} canvasMode={canvasState.mode} />
           <svg
             onWheel={onWheel}
             onPointerUp={onPointerUp}
@@ -468,6 +468,7 @@ export default function Canvas() {
             onPointerMove={onPointerMove}
             className="h-full w-full"
             style={{ touchAction: "none" }}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <g
               style={{
