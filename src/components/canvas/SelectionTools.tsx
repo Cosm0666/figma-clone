@@ -2,8 +2,9 @@ import useSelectionBounds from "~/hooks/useSelectionBounds";
 import { CanvasMode, type Camera } from "~/types";
 import { BsArrowDown, BsArrowUp } from "react-icons/bs";
 import { useMutation, useSelf } from "@liveblocks/react/suspense";
+import { memo } from "react";
 
-export default function SelectionTools({
+function SelectionTools({
   camera,
   canvasMode,
 }: {
@@ -89,3 +90,5 @@ export default function SelectionTools({
     </div>
   );
 }
+
+export default memo(SelectionTools);

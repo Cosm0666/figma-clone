@@ -127,7 +127,7 @@ export default function Canvas() {
         setState({ mode: CanvasMode.Translating, current: point });
       }
     },
-    [canvasState.mode, camera, canvasState.mode, history],
+    [canvasState.mode, camera, history],
   );
 
   const onResizeHandlePointerDown = useCallback(
@@ -196,6 +196,7 @@ export default function Canvas() {
         liveLayersIds.push(layerId);
         liveLayers.set(layerId, layer);
         setMyPresence({ selection: [layerId] }, { addToHistory: true });
+        setState({ mode: CanvasMode.None });
       }
     },
     [],
@@ -422,6 +423,7 @@ export default function Canvas() {
       resizeSelectedLayer,
       translateSlectedLayers,
       updateSelectionNet,
+      startMultiSelection,
     ],
   );
 
