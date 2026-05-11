@@ -38,6 +38,7 @@ import Path from "./Path";
 import SelectionBox from "./SelectionBox";
 import useDeleteLayers from "~/hooks/useDeleteLayers";
 import SelectionTools from "./SelectionTools";
+import Sidebars from "../sidebars/Sidebars";
 
 const MAX_LAYERS = 100;
 const DRAG_SPEED = 0.55;
@@ -46,6 +47,7 @@ const WHEEL_PAN_SPEED = 0.12;
 
 export default function Canvas() {
   const roomColor = useStorage((root) => root.roomColor);
+  const [leftIsMinimized, setLeftIsMinimized] = useState(false);
   const layerIds = useStorage((root) => root.layerIds);
   const pencilDraft = useSelf((me) => me.presence.pencilDraft);
   const deleteLayers = useDeleteLayers();
@@ -525,6 +527,10 @@ export default function Canvas() {
         undo={() => history.undo()}
         canUndo={canUndo}
         canRedo={canRedo}
+      />
+      <Sidebars
+        leftIsMinimized={leftIsMinimized}
+        setLeftIsMinimized={setLeftIsMinimized}
       />
     </div>
   );
